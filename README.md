@@ -13,3 +13,12 @@ You can install the required packages using the following command:
 
 ```bash
 pip install -r requirements.txt
+
+## Configuration
+1. Add your ArcGIS token to `secrets_key.py` in the `TOKEN_ARGIS` variable.
+
+## Execution
+Run the `main.py` script to perform geocoding and query neighborhood information for a specific address.
+
+```bash
+python main.py
