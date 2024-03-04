@@ -1,11 +1,37 @@
 import requests as request
-from secrets_key import TOKEN_ARGIS
 from shapely.geometry import Point, Polygon
 from pyproj import Transformer
 
+from dotenv import load_dotenv
+import os
+load_dotenv()
+TOKEN_ARGIS = os.getenv("TOKEN_ARGIS")
+
+def increment_address_and_query(address, original_neighborhood, increment=100):
+    # Geocode the provided address
+    location = geocoding(address)
+    
+    if location:
+        # Get the neighborhood for the geocoded location
+        neighborhood = get_neighborhood(location["x"], location["y"])
+        
+        if neighborhood and neighborhood == original_neighborhood:
+            # Increment the address and print the new address and neighborhood
+            new_address = f"{int(address.split()[0]) + increment} {' '.join(address.split()[1:])}"
+            print("Address:", new_address, neighborhood)
+            
+            # Recursively call the function for the new address
+            increment_address_and_query(new_address, original_neighborhood, increment)
+        else:
+            print("Neighborhood has changed", neighborhood)
+    else:
+        print("Geocoding error.")
+        
 def geocoding(street_address: str) -> dict:
     # Geocode the provided street address using ArcGIS API
-    url = f"https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=pjson&singleLine={street_address}&token={TOKEN_ARGIS}"
+    url = f"https://geocode-api.arcgis.com\
+        /arcgis/rest/services/World/GeocodeServer/\
+        findAddressCandidates?f=pjson&singleLine={street_address}&token={TOKEN_ARGIS}"
     result = request.get(url=url).json()
     candidates = result["candidates"][0]
     return candidates["location"]
@@ -55,26 +81,6 @@ def get_neighborhood(x_lon, y_lat) -> str:
             return neighborhood
     
     return ""    
-
-def increment_address_and_query(address, original_neighborhood, increment=100):
-    # Geocode the provided address
-    location = geocoding(address)
-    
-    if location:
-        # Get the neighborhood for the geocoded location
-        neighborhood = get_neighborhood(location["x"], location["y"])
-        
-        if neighborhood and neighborhood == original_neighborhood:
-            # Increment the address and print the new address and neighborhood
-            new_address = f"{int(address.split()[0]) + increment} {' '.join(address.split()[1:])}"
-            print("Address:", new_address, neighborhood)
-            
-            # Recursively call the function for the new address
-            increment_address_and_query(new_address, original_neighborhood, increment)
-        else:
-            print("Neighborhood has changed", neighborhood)
-    else:
-        print("Geocoding error.")
 
 if __name__ == '__main__':
     # Solution 1: Geocode a street address and print the result
